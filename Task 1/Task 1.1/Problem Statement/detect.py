@@ -118,6 +118,7 @@ def drawAxis(img, aruco_list, aruco_id, camera_matrix, dist_coeff):
 	markerLength = 100
 	m = markerLength/2
 	pts = np.float32([[-m,m,0],[m,m,0],[-m,-m,0],[-m,m,m]])
+	 #pts = np.float32([[m, m, m], [m, m, m], [m, m, m], [m, m, m]])
 	pt_dict = {}
 	imgpts, _ = cv2.projectPoints(pts, rvec, tvec, camera_matrix, dist_coeff)
 	for i in range(len(pts)):
@@ -145,10 +146,44 @@ def drawCube(img, ar_list, ar_id, camera_matrix, dist_coeff):
 	markerLength = 100
 	m = markerLength/2
 	######################## INSERT CODE HERE ########################
+	pts = np.float32([
+		[-m,m,0],
+		[m,m,0],
+		[-m,-m,0], 
+		[-m,m,m], 
+		[m,-m,0],
+		[m,-m,m],
+		[m,m,m],
+		[-m,-m,m]
+		])
+	pt_dict = {}
+	imgpts, _ = cv2.projectPoints(pts, rvec, tvec, camera_matrix, dist_coeff)
+	for i in range(len(pts)):
+		 pt_dict[tuple(pts[i])] = tuple(imgpts[i].ravel())
+	
+	img = cv2.line(img, pt_dict[tuple(pts[0])], pt_dict[tuple(pts[1])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[0])], pt_dict[tuple(pts[2])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[0])], pt_dict[tuple(pts[3])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[1])], pt_dict[tuple(pts[4])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[1])], pt_dict[tuple(pts[6])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[3])], pt_dict[tuple(pts[7])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[6])], pt_dict[tuple(pts[5])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[2])], pt_dict[tuple(pts[4])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[7])], pt_dict[tuple(pts[5])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[5])], pt_dict[tuple(pts[4])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[6])], pt_dict[tuple(pts[3])], (0, 0, 255), 4)
+	img = cv2.line(img, pt_dict[tuple(pts[7])], pt_dict[tuple(pts[2])], (0, 0, 255), 4)
 
+	# for i in range (8):
+	# 	for j in range (8):
+	# 		if pt_dict[tuple(pts[i])][0] ^ pt_dict[tuple(pts[i])][0] and pt_dict[tuple(pts[i])][1] ^ pt_dict[tuple(pts[i])][1] and pt_dict[tuple(pts[i])][2] ^ pt_dict[tuple(pts[i])][2]:
+	# 			img = cv2.line(img, pt_dict[tuple(pts[i])], pt_dict[tuple(pts[j])], (0,0,255), 4)
+
+	# img = cv2.line(img, src, dst4, (0,0,255), 4)
+	return img
 	
 	##################################################################
-	return img
+
 
 """
 Function Name : drawCylinder()
@@ -180,11 +215,11 @@ the ArUco markers detected in the images.
 
 if __name__=="__main__":
 	cam, dist = getCameraMatrix()
-	img = cv2.imread(r"../TestCases/image_3.jpg")
+	img = cv2.imread(r"../TestCases/image_1.jpg")
 	aruco_list = detect_markers(img, cam, dist)
 	for i in aruco_list:
-		img = drawAxis(img, aruco_list, i[0], cam, dist)
-		##  img = drawCube(img, aruco_list, i[0], cam, dist)
+		## img = drawAxis(img, aruco_list, i[0], cam, dist)
+			img = drawCube(img, aruco_list, i[0], cam, dist)
 		##  img = drawCylinder(img, aruco_list, i[0], cam, dist)
 	cv2.imshow("img", img)
 	cv2.waitKey(0)
