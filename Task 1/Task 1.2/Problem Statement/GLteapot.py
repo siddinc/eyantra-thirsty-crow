@@ -101,6 +101,7 @@ def init_gl():
         glClearDepth(1.0) 
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
         glShadeModel(GL_SMOOTH)   
         glMatrixMode(GL_MODELVIEW)
         glEnable(GL_DEPTH_TEST)
@@ -139,15 +140,15 @@ def drawGLScene():
                 glMatrixMode(GL_MODELVIEW)
                 glLoadIdentity()
                 ar_list = detect_markers(frame)
-##                for i in ar_list:
-##                        if i[0] == 8:
-##                                overlay(frame, ar_list, i[0],"texture_1.png")
-##                        if i[0] == 2:
-##                                overlay(frame, ar_list, i[0],"texture_2.png")
-##                        if i[0] == 7:
-##                                overlay(frame, ar_list, i[0],"texture_3.png")
-##                        if i[0] == 6:
-##                                overlay(frame, ar_list, i[0],"texture_4.png")
+                for i in ar_list:
+                        if i[0] == 8:
+                                overlay(frame, ar_list, i[0],"texture_1.png")
+                        if i[0] == 2:
+                                overlay(frame, ar_list, i[0],"texture_2.png")
+                        if i[0] == 7:
+                                overlay(frame, ar_list, i[0],"texture_3.png")
+                        if i[0] == 6:
+                                overlay(frame, ar_list, i[0],"texture_4.png")
                                 
                 cv2.imshow('frame', frame)
                 cv2.waitKey(1)
@@ -168,11 +169,30 @@ Purpose: This function takes the image in form of a numpy array, camera_matrix a
          is returned as output for the function
 """
 def detect_markers(img):
+        markerLength = 100
         aruco_list = []
-        ################################################################
-        #################### Same code as Task 1.1 #####################
-        ################################################################
+        ######################## INSERT CODE HERE ########################
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
+        parameters = aruco.DetectorParameters_create()
+        
+        corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+
+        if type(ids) == np.ndarray:
+                print(ids)
+                for i in range(len (ids)):
+                    rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], markerLength, camera_matrix, dist_coeff)
+
+                    cornersx = [r[0] for r in tuple(corners[i][0])]
+                    cornersy = [r[1] for r in tuple(corners[i][0])]
+                    centre = tuple(map(int, (sum(cornersx) // 4, sum(cornersy) // 4)))
+
+                    aruco_list.append( (ids[i][0], centre, rvec, tvec) )
+        
+        ##################################################################
         return aruco_list
+
 ########################################################################
 
 
@@ -245,17 +265,20 @@ def overlay(img, ar_list, ar_id, texture_file):
                 if ar_id == x[0]:
                         centre, rvec, tvec = x[1], x[2], x[3]
         rmtx = cv2.Rodrigues(rvec)[0]
+
+        print(tvec)
+
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvecs[0][0][0]],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvecs[0][0][1]],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvecs[0][0][2]],
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/150],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/150],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/150],
                         [0.0       ,0.0       ,0.0       ,1.0    ]
                 ])
         view_matrix = view_matrix * INVERSE_MATRIX
         view_matrix = np.transpose(view_matrix)
 
         
-        init_object_texture(texture_file)
+        # init_object_texture(texture_file)
         glPushMatrix()
         glLoadMatrixd(view_matrix)
         glutSolidTeapot(0.5)
