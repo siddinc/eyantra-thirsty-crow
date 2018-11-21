@@ -37,6 +37,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from PIL import Image
+
 import pygame
 
 
@@ -190,7 +191,7 @@ def draw_background(img):
         bg_image = Image.fromarray(bg_image)     
         ix = bg_image.size[0]
         iy = bg_image.size[1]
-        bg_image = bg_image.tobytes(encoder_name="raw")
+        bg_image = bg_image.tobytes("raw", "BGRX", 0, -1)
   
         # create background texture
         glBindTexture(GL_TEXTURE_2D, texture_background)
@@ -244,9 +245,14 @@ def overlay(img, ar_list, ar_id, texture_file):
                 if ar_id == x[0]:
                         centre, rvec, tvec = x[1], x[2], x[3]
         rmtx = cv2.Rodrigues(rvec)[0]
-        # view_matrix = 
-        # view_matrix = view_matrix * INVERSE_MATRIX
-        # view_matrix = np.transpose(view_matrix)
+        view_matrix = np.array([
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvecs[0][0][0]],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvecs[0][0][1]],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvecs[0][0][2]],
+                        [0.0       ,0.0       ,0.0       ,1.0    ]
+                ])
+        view_matrix = view_matrix * INVERSE_MATRIX
+        view_matrix = np.transpose(view_matrix)
 
         
         init_object_texture(texture_file)
