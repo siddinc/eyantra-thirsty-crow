@@ -246,6 +246,19 @@ Purpose: Takes the filepath of a texture file as input and converts it into Open
 def init_object_texture(image_filepath):
         tex = cv2.imread(image_filepath)
         
+        tex = cv2.flip(tex, 0)
+        tex = Image.fromarray(tex)
+        ix = tex.size[0]
+        iy = tex.size[1]
+        tex = tex.tobytes("raw", "BGRX", 0, -1)
+
+        pot_texture = glGenTextures(1)
+
+        glBindTexture(GL_TEXTURE_2D, pot_texture)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, ix, iy, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex)
+        
         return None
 
 """
@@ -269,16 +282,16 @@ def overlay(img, ar_list, ar_id, texture_file):
         print(tvec)
 
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/150],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/150],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/150],
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/200],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/200],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/200],
                         [0.0       ,0.0       ,0.0       ,1.0    ]
                 ])
         view_matrix = view_matrix * INVERSE_MATRIX
         view_matrix = np.transpose(view_matrix)
 
         
-        # init_object_texture(texture_file)
+        init_object_texture(texture_file)
         glPushMatrix()
         glLoadMatrixd(view_matrix)
         glutSolidTeapot(0.5)
