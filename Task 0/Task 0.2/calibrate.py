@@ -36,6 +36,7 @@ for fname in images:
         #cv2.waitKey(1)
    
 
+print('Calibrating...')
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 print (mtx, dist)
 np.savez("Camera.npz", ret=ret, mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)

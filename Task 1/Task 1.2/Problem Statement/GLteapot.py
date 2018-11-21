@@ -51,6 +51,9 @@ INVERSE_MATRIX = np.array([[ 1.0, 1.0, 1.0, 1.0],
                            [-1.0,-1.0,-1.0,-1.0],
                            [ 1.0, 1.0, 1.0, 1.0]])
 
+xdistortion = lambda x, y: 2*p1*x*y + p2*(r**2 + 2*x**2)
+# ydistortion = lambda x, y: 
+
 ################## Define Utility Functions Here #######################
 """
 Function Name : getCameraMatrix()
@@ -79,6 +82,10 @@ Purpose: Initialises OpenGL window and callback functions. Then starts the event
 def main():
         glutInit()
         getCameraMatrix()
+
+        print(dist_coeff[0][2])
+        print(camera_matrix)
+
         glutInitWindowSize(640, 480)
         glutInitWindowPosition(625, 100)
         glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE)
@@ -282,9 +289,9 @@ def overlay(img, ar_list, ar_id, texture_file):
         print(tvec)
 
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/200],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/200],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/200],
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/100],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/150],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/150],
                         [0.0       ,0.0       ,0.0       ,1.0    ]
                 ])
         view_matrix = view_matrix * INVERSE_MATRIX
