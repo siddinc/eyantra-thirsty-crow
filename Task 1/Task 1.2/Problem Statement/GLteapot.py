@@ -125,7 +125,7 @@ def resize(w,h):
         ratio = 1.0 * w / h
         glMatrixMode(GL_PROJECTION)
         glViewport(0,0,w,h)
-        gluPerspective(33.7, ratio, 0.1, 100.0) # NOTE: Changed fov angle to 33.7 for better perspective.
+        gluPerspective(45, ratio, 0.1, 100.0)
         
 
 """
@@ -227,7 +227,7 @@ def draw_background(img):
         # draw background
         glBindTexture(GL_TEXTURE_2D, texture_background)
         glPushMatrix()
-        glTranslatef(0.0,0.0,-10.0)
+        glTranslatef(0, 0, -3 / math.tan(math.radians(45 / 2))) # NOTE: 45 is the fovy passed to glPerspective.
         
         # Immediate mode
         glBegin(GL_QUADS)
