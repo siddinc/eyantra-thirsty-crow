@@ -83,7 +83,6 @@ def main():
         glutInit()
         getCameraMatrix()
 
-        print(dist_coeff[0][2])
         print(camera_matrix)
 
         glutInitWindowSize(640, 480)
@@ -108,7 +107,7 @@ def init_gl():
         glClearDepth(1.0) 
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
-        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_TEXTURE_2D) # NOTE: This was not enabled!!
         glShadeModel(GL_SMOOTH)   
         glMatrixMode(GL_MODELVIEW)
         glEnable(GL_DEPTH_TEST)
@@ -123,10 +122,11 @@ Output: None
 Purpose: Initialises the projection matrix of OpenGL scene
 """
 def resize(w,h):
-        ratio = 1.0* w / h
+        ratio = 1.0 * w / h
         glMatrixMode(GL_PROJECTION)
         glViewport(0,0,w,h)
-        gluPerspective(45, ratio, 0.1, 100.0)
+        gluPerspective(33.7, ratio, 0.1, 100.0) # NOTE: Changed fov angle to 33.7 for better perspective.
+        
 
 """
 Function Name : drawGLScene()
@@ -178,7 +178,6 @@ Purpose: This function takes the image in form of a numpy array, camera_matrix a
 def detect_markers(img):
         markerLength = 100
         aruco_list = []
-        ######################## INSERT CODE HERE ########################
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
@@ -197,7 +196,6 @@ def detect_markers(img):
 
                     aruco_list.append( (ids[i][0], centre, rvec, tvec) )
         
-        ##################################################################
         return aruco_list
 
 ########################################################################
@@ -231,11 +229,12 @@ def draw_background(img):
         glPushMatrix()
         glTranslatef(0.0,0.0,-10.0)
         
+        # Immediate mode
         glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0); glVertex3f(-4.0, -3.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex3f( 4.0, -3.0, 0.0)
-        glTexCoord2f(1.0, 0.0); glVertex3f( 4.0,  3.0, 0.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-4.0,  3.0, 0.0)
+        glTexCoord2f(0.0, 1.0); glVertex2f(-4.0, -3.0)
+        glTexCoord2f(1.0, 1.0); glVertex2f( 4.0, -3.0)
+        glTexCoord2f(1.0, 0.0); glVertex2f( 4.0,  3.0)
+        glTexCoord2f(0.0, 0.0); glVertex2f(-4.0,  3.0)
         glEnd()
 
         glPopMatrix()
@@ -252,15 +251,15 @@ Purpose: Takes the filepath of a texture file as input and converts it into Open
 """
 def init_object_texture(image_filepath):
         tex = cv2.imread(image_filepath)
-        
+        # convert image to OpenGL texture format
         tex = cv2.flip(tex, 0)
         tex = Image.fromarray(tex)
         ix = tex.size[0]
         iy = tex.size[1]
         tex = tex.tobytes("raw", "BGRX", 0, -1)
 
+        # create pot texture
         pot_texture = glGenTextures(1)
-
         glBindTexture(GL_TEXTURE_2D, pot_texture)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -289,14 +288,20 @@ def overlay(img, ar_list, ar_id, texture_file):
         print(tvec)
 
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/100],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/150],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/150],
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/200],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/200],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/200],
                         [0.0       ,0.0       ,0.0       ,1.0    ]
                 ])
         view_matrix = view_matrix * INVERSE_MATRIX
         view_matrix = np.transpose(view_matrix)
 
+        # img_array = Image.fromarray(img)     
+        # W = img_array.size[0]
+        # H = img_array.size[1]
+        # near = 0.1
+        # far = 100.0
+        # glFrustum(0, 640, 480, 0, near, far)
         
         init_object_texture(texture_file)
         glPushMatrix()
