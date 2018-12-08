@@ -40,6 +40,7 @@ from PIL import Image
 
 import pygame
 
+markerlength = 100
 
 texture_object = None
 texture_background = None
@@ -51,10 +52,9 @@ INVERSE_MATRIX = np.array([[ 1.0, 1.0, 1.0, 1.0],
                            [-1.0,-1.0,-1.0,-1.0],
                            [ 1.0, 1.0, 1.0, 1.0]])
 
-xdistortion = lambda x, y: 2*p1*x*y + p2*(r**2 + 2*x**2)
-# ydistortion = lambda x, y: 
 
 ################## Define Utility Functions Here #######################
+
 """
 Function Name : getCameraMatrix()
 Input: None
@@ -66,6 +66,24 @@ def getCameraMatrix():
         global camera_matrix, dist_coeff
         with np.load('System.npz') as X:
                 camera_matrix, dist_coeff, _, _ = [X[i] for i in ('mtx','dist','rvecs','tvecs')]
+
+
+def get_perpective_matrix():
+        fx = camera_matrix[0, 0]
+        fy = camera_matrix[1, 1]
+        s  = camera_matrix[0, 1]
+        cx = camera_matrix[0, 2]
+        cy = camera_matrix[1, 2]
+
+        near = 0.1
+        far = 1000
+
+        return np.array([
+                [fx, s,  -cx,        0],
+                [0,  fy, -cy,        0],
+                [0,  0,  near - far, near*far],
+                [0,  0,  -1,         0]])
+
 
 
 
@@ -84,6 +102,8 @@ def main():
         getCameraMatrix()
 
         print(camera_matrix)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640) # NOTE: Since different laptops have different default webcam capture resolutions
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480) # NOTE: I am limiting the captured image size to be the same size and aspect ratio as window.
 
         glutInitWindowSize(640, 480)
         glutInitWindowPosition(625, 100)
@@ -108,7 +128,7 @@ def init_gl():
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D) # NOTE: This was not enabled!!
-        glShadeModel(GL_SMOOTH)   
+        glShadeModel(GL_SMOOTH)
         glMatrixMode(GL_MODELVIEW)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
@@ -125,7 +145,8 @@ def resize(w,h):
         ratio = 1.0 * w / h
         glMatrixMode(GL_PROJECTION)
         glViewport(0,0,w,h)
-        gluPerspective(45, ratio, 0.1, 100.0)
+        gluPerspective(33.7, ratio, 0.1, 100.0) # NOTE: Changing to 33.7 for easy calculations of Z axis.
+                                                # As per the tutorial in readme.
         
 
 """
@@ -156,7 +177,7 @@ def drawGLScene():
                                 overlay(frame, ar_list, i[0],"texture_3.png")
                         if i[0] == 6:
                                 overlay(frame, ar_list, i[0],"texture_4.png")
-                                
+                        frame = aruco.drawAxis(frame, camera_matrix, dist_coeff, i[2], i[3], markerlength) # DEBUG ONLY
                 cv2.imshow('frame', frame)
                 cv2.waitKey(1)
         glutSwapBuffers()
@@ -176,7 +197,6 @@ Purpose: This function takes the image in form of a numpy array, camera_matrix a
          is returned as output for the function
 """
 def detect_markers(img):
-        markerLength = 100
         aruco_list = []
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -186,9 +206,8 @@ def detect_markers(img):
         corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
 
         if type(ids) == np.ndarray:
-                print(ids)
                 for i in range(len (ids)):
-                    rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], markerLength, camera_matrix, dist_coeff)
+                    rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], markerlength, camera_matrix, dist_coeff)
 
                     cornersx = [r[0] for r in tuple(corners[i][0])]
                     cornersy = [r[1] for r in tuple(corners[i][0])]
@@ -227,14 +246,14 @@ def draw_background(img):
         # draw background
         glBindTexture(GL_TEXTURE_2D, texture_background)
         glPushMatrix()
-        glTranslatef(0, 0, -3 / math.tan(math.radians(45 / 2))) # NOTE: 45 is the fovy passed to glPerspective.
-        
+
+        glTranslatef(0, 0, -99.9) # NOTE: Go the the back.
         # Immediate mode
         glBegin(GL_QUADS)
-        glTexCoord2f(0.0, 1.0); glVertex2f(-4.0, -3.0)
-        glTexCoord2f(1.0, 1.0); glVertex2f( 4.0, -3.0)
-        glTexCoord2f(1.0, 0.0); glVertex2f( 4.0,  3.0)
-        glTexCoord2f(0.0, 0.0); glVertex2f(-4.0,  3.0)
+        glTexCoord2f(0.0, 1.0); glVertex2f(-40.0, -30.0)
+        glTexCoord2f(1.0, 1.0); glVertex2f(+40.0, -30.0)
+        glTexCoord2f(1.0, 0.0); glVertex2f(+40.0, +30.0)
+        glTexCoord2f(0.0, 0.0); glVertex2f(-40.0, +30.0)
         glEnd()
 
         glPopMatrix()
@@ -267,6 +286,7 @@ def init_object_texture(image_filepath):
         
         return None
 
+
 """
 Function Name : overlay()
 Input: img (numpy array), aruco_list, aruco_id, texture_file (filepath of texture file)
@@ -280,34 +300,61 @@ Purpose: Receives the ArUco information as input and overlays the 3D Model of a 
          however add your own code in this function.
 """
 def overlay(img, ar_list, ar_id, texture_file):
+        init_object_texture(texture_file)
+
         for x in ar_list:
                 if ar_id == x[0]:
                         centre, rvec, tvec = x[1], x[2], x[3]
         rmtx = cv2.Rodrigues(rvec)[0]
-
         print(tvec)
 
+        # Easy access
+        tvec = tvec[0][0]
+
+        # Camera parameters
+        fx = camera_matrix[0, 0]
+        fy = camera_matrix[1, 1]
+        s  = camera_matrix[0, 1]
+        cx = camera_matrix[0, 2]
+        cy = camera_matrix[1, 2]
+
+        # Transformation
+        newcameramtx, _ = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeff, (1280, 720), 1, (640, 480))
+        calib = np.reshape(camera_matrix, [3, 3])
+        dist = np.array(dist_coeff, dtype=np.float32)
+        ucenter = cv2.undistortPoints(np.array([centre]), calib, dist, None, newcameramtx)
+        print (ucenter)
+
+        # View matrix
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]/200],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]/200],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]/200],
-                        [0.0       ,0.0       ,0.0       ,1.0    ]
-                ])
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2], 0    ],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2], 0    ],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2], tvec[2]/100],
+                        [0.0       ,0.0       ,0.0       ,1.0   ]])
         view_matrix = view_matrix * INVERSE_MATRIX
         view_matrix = np.transpose(view_matrix)
 
-        # img_array = Image.fromarray(img)     
-        # W = img_array.size[0]
-        # H = img_array.size[1]
-        # near = 0.1
-        # far = 100.0
-        # glFrustum(0, 640, 480, 0, near, far)
-        
-        init_object_texture(texture_file)
+        # Store the initial config
+        initial_projection = glGetFloatv(GL_PROJECTION_MATRIX)
+
+        # Switch to camera projection matrix
+        pers = get_perpective_matrix()
+
+        # glMatrixMode(GL_PROJECTION)
+        # glLoadIdentity()
+        # glOrtho(-640, 0, 480/2, -480/2, 0.1, 1000)
+        # glMultMatrixf(pers)
+
+        # Draw the teapot
+        glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
-        glLoadMatrixd(view_matrix)
+        glLoadMatrixf(view_matrix)
         glutSolidTeapot(0.5)
         glPopMatrix()
+
+        # Switch back to initial config
+        glMatrixMode(GL_PROJECTION)
+        glLoadMatrixf(initial_projection)
 
 
 ########################################################################
