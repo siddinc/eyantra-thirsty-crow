@@ -40,7 +40,7 @@ from PIL import Image
 
 import pygame
 
-markerlength = 100
+markerlength = 14/100
 
 texture_object = None
 texture_background = None
@@ -68,7 +68,7 @@ def getCameraMatrix():
                 camera_matrix, dist_coeff, _, _ = [X[i] for i in ('mtx','dist','rvecs','tvecs')]
 
 
-def get_perpective_matrix():
+def get_perp():
         fx = camera_matrix[0, 0]
         fy = camera_matrix[1, 1]
         s  = camera_matrix[0, 1]
@@ -76,7 +76,7 @@ def get_perpective_matrix():
         cy = camera_matrix[1, 2]
 
         near = 0.1
-        far = 1000
+        far = 100.0
 
         return np.array([
                 [fx, s,  -cx,        0],
@@ -300,62 +300,39 @@ Purpose: Receives the ArUco information as input and overlays the 3D Model of a 
          however add your own code in this function.
 """
 def overlay(img, ar_list, ar_id, texture_file):
-        init_object_texture(texture_file)
-
         for x in ar_list:
                 if ar_id == x[0]:
                         centre, rvec, tvec = x[1], x[2], x[3]
         rmtx = cv2.Rodrigues(rvec)[0]
+
         print(tvec)
 
-        # Easy access
-        tvec = tvec[0][0]
-
-        # Camera parameters
-        fx = camera_matrix[0, 0]
-        fy = camera_matrix[1, 1]
-        s  = camera_matrix[0, 1]
-        cx = camera_matrix[0, 2]
-        cy = camera_matrix[1, 2]
-
-        # Transformation
-        newcameramtx, _ = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeff, (1280, 720), 1, (640, 480))
-        calib = np.reshape(camera_matrix, [3, 3])
-        dist = np.array(dist_coeff, dtype=np.float32)
-        ucenter = cv2.undistortPoints(np.array([centre]), calib, dist, None, newcameramtx)
-        print (ucenter)
-
-        # View matrix
         view_matrix = np.array([
-                        [rmtx[0][0],rmtx[0][1],rmtx[0][2], 0    ],
-                        [rmtx[1][0],rmtx[1][1],rmtx[1][2], 0    ],
-                        [rmtx[2][0],rmtx[2][1],rmtx[2][2], tvec[2]/100],
-                        [0.0       ,0.0       ,0.0       ,1.0   ]])
+                        [rmtx[0][0],rmtx[0][1],rmtx[0][2],tvec[0][0][0]],
+                        [rmtx[1][0],rmtx[1][1],rmtx[1][2],tvec[0][0][1]],
+                        [rmtx[2][0],rmtx[2][1],rmtx[2][2],tvec[0][0][2]],
+                        [0.0       ,0.0       ,0.0       ,1.0    ]
+                ])
         view_matrix = view_matrix * INVERSE_MATRIX
         view_matrix = np.transpose(view_matrix)
 
-        # Store the initial config
-        initial_projection = glGetFloatv(GL_PROJECTION_MATRIX)
+        old_proj = glGetFloatv(GL_PROJECTION_MATRIX)
 
-        # Switch to camera projection matrix
-        pers = get_perpective_matrix()
-
-        # glMatrixMode(GL_PROJECTION)
-        # glLoadIdentity()
-        # glOrtho(-640, 0, 480/2, -480/2, 0.1, 1000)
-        # glMultMatrixf(pers)
-
-        # Draw the teapot
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, 640, 480, 0, 0.1, 100.0)
+        perp = get_perp()
+        glMultMatrixf(perp)
+        
         glMatrixMode(GL_MODELVIEW)
+        init_object_texture(texture_file)
         glPushMatrix()
-        glLoadMatrixf(view_matrix)
+        glLoadMatrixd(view_matrix)
         glutSolidTeapot(0.5)
         glPopMatrix()
 
-        # Switch back to initial config
         glMatrixMode(GL_PROJECTION)
-        glLoadMatrixf(initial_projection)
-
+        glLoadMatrixf(old_proj)
 
 ########################################################################
 
