@@ -1,7 +1,7 @@
 import collections
 
 
-arena_config = {0: (“Water Pitcher”, 5, “2-2”), 1:(“Pebble”, 3, “1-1”), 2:(“Pebble”, 11, “3-3”), 3:(“Pebble”, 13, “2-2”)}
+arena_config = {0: (“Water Pitcher”, 5, “2-2”), 1: (“Pebble”, 3, “1-1”), 2: (“Pebble”, 11, “3-3”), 3: (“Pebble”, 13, “2-2”)}
 pebble_spots = []
 water_spot = []
 
@@ -93,20 +93,22 @@ orientation = {
     19: [[42, 50], [43, 49], [41, 51]],
 }
 
+
 class Queue:
     def __init__(self):
         self.elements = collections.deque()
-    
+
     def empty(self):
         return len(self.elements) == 0
-    
+
     def put(self, x):
         self.elements.append(x)
-    
+
     def get(self):
         return self.elements.popleft()
 
-def reconstruct_path(came_from, start, goal):   #returns a list of nodes to traverse
+
+def reconstruct_path(came_from, start, goal):  # returns a list of nodes to traverse
     current = goal
     path = []
     while current != start:
@@ -114,9 +116,10 @@ def reconstruct_path(came_from, start, goal):   #returns a list of nodes to trav
         current = came_from[current]
     path.append(start)
     path.reverse()
-    return path     
+    return path
 
-def bfs(graph, source, destination):    #returns a list of nodes in shortest path to traverse
+
+def bfs(graph, source, destination):  # returns a list of nodes in shortest path to traverse
     frontier = Queue()
     frontier.put(source)
     came_from = {}
@@ -126,7 +129,7 @@ def bfs(graph, source, destination):    #returns a list of nodes in shortest pat
         current = frontier.get()
 
         if current == destination:
-            break           
+            break
 
         for next in graph[current]:
             if next not in came_from:
@@ -134,19 +137,27 @@ def bfs(graph, source, destination):    #returns a list of nodes in shortest pat
                 came_from[next] = current
     return reconstruct_path(came_from, source, destination)
 
-def path_generate(robot_source, robot_destination):     #returns shortest path out of 2 paths for diagonally opposite nodes
+
+# returns shortest path out of 2 paths for diagonally opposite nodes
+def path_generate(robot_source, robot_destination):
     #robot_destination = [cell_no, orientation]
     if robot_destination[1] == "1-1":
-        path1 = bfs(graph, robot_source, orientation[robot_destination[0]][0][0])
-        path2 = bfs(graph, robot_source, orientation[robot_destination[0]][0][1])
+        path1 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][0][0])
+        path2 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][0][1])
 
     elif robot_destination[1] == "2-2":
-        path1 = bfs(graph, robot_source, orientation[robot_destination[0]][1][0])
-        path2 = bfs(graph, robot_source, orientation[robot_destination[0]][1][1])
-        
+        path1 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][1][0])
+        path2 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][1][1])
+
     else:
-        path1 = bfs(graph, robot_source, orientation[robot_destination[0]][2][0])
-        path2 = bfs(graph, robot_source, orientation[robot_destination[0]][2][1])
+        path1 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][2][0])
+        path2 = bfs(graph, robot_source,
+                    orientation[robot_destination[0]][2][1])
 
     if len(path1) < len(path2):
         final_path = path1
@@ -154,37 +165,44 @@ def path_generate(robot_source, robot_destination):     #returns shortest path o
         final_path = path2
     return final_path
 
+
 def water_pitcher_zone(water_spot):
     if water_spot[0][1] == "1-1":
 
+
 def current_node_visit():
-    
 
 
 def traverse(final_path):
-    #motor functions
+    # motor functions
+
 
 def pickup():
-    #pickup functions
-    
+    # pickup functions
+
+
 def drop():
-    #drop functions
+    # drop functions
+
+def left():
+    print ('robot moved lieft')
+
 
 def task():
-    #assuming that each pebble zone has only 1 pebble for simplicity
+    # assuming that each pebble zone has only 1 pebble for simplicity
     length = len(pebble_spots)
-    robot_start = 1     #1 start1 or 56 for start2
-    pebble_zone = pebble_spots.pop(0)          
-    while(length > 0):  #till all pebble zones not visited   
-        road = path_generate(robot_start, pebble_zone)           
+    robot_start = 1  # 1 start1 or 56 for start2
+    pebble_zone = pebble_spots.pop(0)
+    while(length > 0):  # till all pebble zones not visited
+        road = path_generate(robot_start, pebble_zone)
         traverse(road)
         pickup()
         robot_start = pebble_zone
         road = path_generate(robot_start, water_spot[0])
         traverse(road)
         drop()
-        robot_start = water_pitcher_zone()  #water pitcher location
-        pebble_zone = pebble_spots.pop(0)    #next pebble zone location
+        robot_start = water_pitcher_zone()  # water pitcher location
+        pebble_zone = pebble_spots.pop(0)  # next pebble zone location
         length -= 1
 
         '''
