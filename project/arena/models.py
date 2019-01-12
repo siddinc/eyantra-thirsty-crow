@@ -4,43 +4,102 @@ DIRECTION_MAPPING = {
     '3-3': (120, 300),
 }
 
-@DeprecationWarning
+VERTEX_ANGLES = [0, 60, 120, 180, 240, 300]
+
+def get_viscinity(angle, offset):
+    return (angle + offset + 360) % 360
+
+def inverse_angle(angle):
+    return (angle + 180) % 360
+
 class Node:
-    def __init__(self, number, neighbours):
-        self.number = number
-        self.neighbours = neighbours
+    def __init__(self):
+        self.pos = {}
+        self.adj = []
+
+    def add(self, number, angle):
+        self.pos[number] = angle
+
+    def __str__(self):
+        return "POSITIONAL:{} | ADJACENT:{}".format(self.pos, self.adj)
+
+    def __repr__(self):
+        return "<Node pos={}>".format(self.pos)
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.pos.items())))
+
+    def __eq__(self, other):
+        return self.pos == other.pos
+
 
 class Arena:
     def __init__(self, data={}):
-        self.nodes = {}
+        self.hexes = {}
         if data:
             self.add(data=data)
 
-    def add(self, number=0, neighbours={}, data={}):
+    def add(self, number=None, neighbours={}, data={}):
         # If JSON is passed
         if data:
-            self.nodes = { **self.nodes, **data }
+            self.hexes = { **self.hexes, **data }
             return
 
-        if number not in self.nodes:
-            self.nodes[number] = neighbours
+        if not number:
+            return Exception('Pass a number!')
+
+        if number not in self.hexes:
+            self.hexes[number] = neighbours
         else:
-            self.nodes[number] = {**self.nodes[number], **neighbours}
+            self.hexes[number] = {**self.hexes[number], **neighbours}
 
         for d, n in neighbours.items():
-            if n not in self.nodes:
-                self.nodes [n] = {
-                    (d+180) % 360: number
+            if n not in self.hexes:
+                self.hexes [n] = {
+                    inverse_angle(d): number
                 }
-            elif number not in self.nodes [n]:
-                self.nodes [n][(d+180) % 360] = number
+            elif number not in self.hexes [n].values():
+                self.hexes [n][inverse_angle(d)] = number
 
-    def remove(self, number):
-        if number in self.nodes:
-            del self.nodes[number]
+    def get_vertices(self):
+        nodes = []
+
+        # Make nodes and add positions.
+        for h in self.hexes:
+            for v in VERTEX_ANGLES:
+                n = Node()
+                n.add(h, v)
+                # Get the hexes in viscinity
+                hex_visc = [get_viscinity(v, -30), get_viscinity(v, +30)]
+                # Get vertices in viscinity
+                vert_visc = [get_viscinity(inverse_angle(hex_visc[0]), -30), get_viscinity(inverse_angle(hex_visc[1]), +30)]
+                # Check adjoining hexes
+                for i, vhex in enumerate(hex_visc):
+                    if vhex in self.hexes[h]:
+                        # Get hex number
+                        adj_hex = self.hexes[h][vhex]
+                        # Get hex vertex
+                        adj_vertex = vert_visc[i]
+                        # Add position
+                        n.add(adj_hex, adj_vertex)
+                # Add to final set.
+                nodes.append(n)
+
+        nodes = list(set(nodes)) # Remove repetitions
+        
+        # Add links.
+        for node in nodes:
+            root_hex = list(node.pos.keys())[0]
+            angle = node.pos[root_hex]
+            visc = [get_viscinity(root_hex, -60), get_viscinity(root_hex, +60)]
+            adj_nodes = list(filter(lambda h: root_hex in list(h.pos), nodes))
+            print("{} adj = {}".format(node, adj_nodes))
+            print ("***")
+        
+        return nodes
     
     def __str__(self):
-        return self.nodes.__str__()
+        return "\n".join(["{}: {}".format(n, neighs) for n, neighs in self.hexes.items()])
     
     def __repr__(self):
-        return "Arena<Nodes: {}>".format(len(self.nodes))
+        return "<Arena nodes={}>".format(len(self.hexes))

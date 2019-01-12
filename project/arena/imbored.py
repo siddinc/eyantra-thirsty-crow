@@ -26,6 +26,12 @@ arena2 = [
 # Arena
 a = {}
 
+node = {
+    1: 60,
+    2: 180,
+    3: 210
+}
+
 for ipart, part in enumerate([arena1, arena2]): # Iterate over both paths
     for index, col in enumerate(part): # iterate over each column
         if index < 2: # Omit middle column

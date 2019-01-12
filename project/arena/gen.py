@@ -7,4 +7,9 @@ with open('./arena_megadict.json') as f:
     mega_dict = util.clean_tree_dict(mega_dict)
 
 arena = Arena(data=mega_dict)
-print (arena)
+v = arena.get_vertices()
+
+for i in v:
+    print (repr(i))
+
+print (len(v))
