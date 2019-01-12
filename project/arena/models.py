@@ -15,13 +15,12 @@ def inverse_angle(angle):
 class Node:
     def __init__(self):
         self.pos = {}
-        self.adj = []
 
     def add(self, number, angle):
         self.pos[number] = angle
 
     def __str__(self):
-        return "POSITIONAL:{} | ADJACENT:{}".format(self.pos, self.adj)
+        return str(self.pos)
 
     def __repr__(self):
         return "<Node pos={}>".format(self.pos)
@@ -39,30 +38,11 @@ class Arena:
         if data:
             self.add(data=data)
 
-    def add(self, number=None, neighbours={}, data={}):
-        # If JSON is passed
-        if data:
-            self.hexes = { **self.hexes, **data }
-            return
-
-        if not number:
-            return Exception('Pass a number!')
-
-        if number not in self.hexes:
-            self.hexes[number] = neighbours
-        else:
-            self.hexes[number] = {**self.hexes[number], **neighbours}
-
-        for d, n in neighbours.items():
-            if n not in self.hexes:
-                self.hexes [n] = {
-                    inverse_angle(d): number
-                }
-            elif number not in self.hexes [n].values():
-                self.hexes [n][inverse_angle(d)] = number
+    def add(self, data):
+        self.hexes = { **self.hexes, **data }
 
     def get_vertices(self):
-        nodes = []
+        nodes = {}
 
         # Make nodes and add positions.
         for h in self.hexes:
@@ -75,17 +55,11 @@ class Arena:
                 vert_visc = [get_viscinity(inverse_angle(hex_visc[0]), -30), get_viscinity(inverse_angle(hex_visc[1]), +30)]
                 # Check adjoining hexes
                 for i, vhex in enumerate(hex_visc):
-                    if vhex in self.hexes[h]:
-                        # Get hex number
-                        adj_hex = self.hexes[h][vhex]
-                        # Get hex vertex
-                        adj_vertex = vert_visc[i]
-                        # Add position
+                    if vhex in self.hexes[h]: # If there is a hex at angle vhex
+                        adj_hex = self.hexes[h][vhex] # Get hex number
+                        adj_vertex = vert_visc[i] # Get vertex
                         n.add(adj_hex, adj_vertex)
-                # Add to final set.
-                nodes.append(n)
-
-        nodes = list(set(nodes)) # Remove repetitions
+                nodes[n] = []
         
         # Add links.
         for node in nodes:
