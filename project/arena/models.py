@@ -6,13 +6,16 @@ DIRECTION_MAPPING = {
 
 VERTEX_ANGLES = [0, 60, 120, 180, 240, 300]
 
+
 def get_viscinity(angle, offset):
     return (angle + offset + 360) % 360
+
 
 def inverse_angle(angle):
     return (angle + 180) % 360
 
-class Node:
+
+class Node(dict):
     def __init__(self):
         self.pos = {}
 
@@ -23,13 +26,22 @@ class Node:
         return str(self.pos)
 
     def __repr__(self):
-        return "<Node pos={}>".format(self.pos)
+        # return "<Node pos={}>".format(str(self.pos))
+        return str(self)
 
     def __hash__(self):
         return hash(tuple(sorted(self.pos.items())))
 
-    def __eq__(self, other):
-        return self.pos == other.pos
+
+class NodeDict(dict):
+    def __init__(self, *arg, **kwargs):
+      super(NodeDict, self).__init__(*arg, **kwargs)
+
+    def get_node(self, angle, hex_no):
+        for n in self.keys(): # Loop over all arena nodes
+            if hex_no in n.pos.keys(): # Get the node which contains the hex number
+                if n.pos[hex_no] == angle: # If the node is at that angle for the hex
+                    return n
 
 
 class Arena:
@@ -41,8 +53,9 @@ class Arena:
     def add(self, data):
         self.hexes = { **self.hexes, **data }
 
-    def get_vertices(self):
-        nodes = {}
+    @property
+    def vertices(self):
+        nodes = NodeDict()
 
         # Make nodes and add positions.
         for h in self.hexes:
@@ -58,17 +71,14 @@ class Arena:
                     if vhex in self.hexes[h]: # If there is a hex at angle vhex
                         adj_hex = self.hexes[h][vhex] # Get hex number
                         adj_vertex = vert_visc[i] # Get vertex
-                        n.add(adj_hex, adj_vertex)
+                        n.add(adj_hex, adj_vertex) # Add to node parameters
                 nodes[n] = []
         
         # Add links.
-        for node in nodes:
-            root_hex = list(node.pos.keys())[0]
-            angle = node.pos[root_hex]
-            visc = [get_viscinity(root_hex, -60), get_viscinity(root_hex, +60)]
-            adj_nodes = list(filter(lambda h: root_hex in list(h.pos), nodes))
-            print("{} adj = {}".format(node, adj_nodes))
-            print ("***")
+        for n in nodes:
+            for h, a in n.pos.items(): # Loop over all the hexes node is connected to
+                adj_node = nodes.get_node((a + 60) % 360, h) # Get the node 60degrees after this node
+                nodes[n].append(adj_node) # Add to adjacency dictionary
         
         return nodes
     
