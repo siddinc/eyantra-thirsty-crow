@@ -15,7 +15,7 @@ def inverse_angle(angle):
     return (angle + 180) % 360
 
 
-class Node(dict):
+class Node:
     def __init__(self):
         self.pos = {}
 
@@ -37,7 +37,7 @@ class NodeDict(dict):
     def __init__(self, *arg, **kwargs):
       super(NodeDict, self).__init__(*arg, **kwargs)
 
-    def get_node(self, angle, hex_no):
+    def get_node(self, hex_no, angle):
         for n in self.keys(): # Loop over all arena nodes
             if hex_no in n.pos.keys(): # Get the node which contains the hex number
                 if n.pos[hex_no] == angle: # If the node is at that angle for the hex
@@ -76,9 +76,13 @@ class Arena:
         
         # Add links.
         for n in nodes:
+            s = set()
             for h, a in n.pos.items(): # Loop over all the hexes node is connected to
-                adj_node = nodes.get_node((a + 60) % 360, h) # Get the node 60degrees after this node
-                nodes[n].append(adj_node) # Add to adjacency dictionary
+                adj_node = nodes.get_node(h, (a + 60) % 360) # Get the node 60degrees after this node
+                s.add(adj_node) # Add to adjacency dictionary
+                adj_node = nodes.get_node(h, (a - 60 + 360) % 360) # Get the node 60degrees before this node
+                s.add(adj_node) # Add to adjacency dictionary
+                nodes[n] = list(s)
         
         return nodes
     

@@ -133,6 +133,7 @@ if len(path1) < len(path2):
     final_path = path1
 else:
     final_path = path2
+
 print(path1)
 print(path2)
 print(final_path)
