@@ -1,5 +1,5 @@
 from queue import Queue
-from math import cos, sin, atan, radians, degrees
+from math import cos, sin, atan2, radians, degrees
 import numpy as np
 
 
@@ -11,20 +11,10 @@ def cross(avec, bvec):
     cvec = np.cross(avec, bvec)
     return cvec
 
-def get_node_dir_vec(avec, bvec):
+def get_direction_vec(avec, bvec):
     """ Return the vector originating from a to b. """
     cvec = np.subtract(bvec, avec)
     return cvec
-
-def angle(v1, v2, acute=True):
-    """ v1 is your firsr vector
-    v2 is your second vector """
-    
-    angle = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
-    if (acute == True):
-        return degrees(angle)
-    else:
-        return degrees(2 * np.pi - angle)
 
 
 #######################################################
@@ -84,15 +74,22 @@ def traverse(path, orientation, mode):
         svec = to_vec (source.pos[common_node])
         dvec = to_vec (destination.pos[common_node])
 
-        dir_vec = get_node_dir_vec(svec, dvec)
-        new_orientation = atan(dir_vec[1]/dir_vec[0])
+        direction_vec = get_direction_vec(svec, dvec)
+        new_orientation = degrees(atan2(direction_vec[1], direction_vec[0]))
 
-        v = cross(to_vec(orientation), dir_vec)
+        screw_vec = cross(to_vec(orientation), direction_vec)
 
-        if v[2] > 0:
+        # print ("DEBUG {} to {}".format(source, destination))
+        # print ("ORIENTATION {} VECTOR {}".format(int(orientation), to_vec(orientation)))
+        # print ("DIRECTION VECTOR {}".format(direction_vec))
+        # print ("SCREW VECTOR {}".format(screw_vec))
+        # print ("COMMAND {}".format('l' if screw_vec[2] > 0 else 'r'))
+
+        if screw_vec[2] > 0:
             commands.append('l')
         else:
             commands.append('r')
         orientation = new_orientation
 
-    return commands
+
+    return commands, orientation
