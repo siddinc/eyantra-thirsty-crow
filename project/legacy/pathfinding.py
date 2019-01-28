@@ -60,7 +60,7 @@ graph = {
 }
 
 orientation = {
-    1: [[27, 38], [28, 37], [26, 39]],      #: [[1-1], [2-2], [3-3]]
+    1: [[27, 38], [28, 37], [26, 39]],  #: [[1-1], [2-2], [3-3]]
     2: [[16, 26], [17, 25], [15, 27]],
     3: [[25, 36], [26, 35], [24, 37]],
     4: [[37, 47], [38, 46], [36, 48]],
@@ -107,7 +107,9 @@ def reconstruct_path(came_from, start, goal):  # returns a list of nodes to trav
     return path
 
 
-def bfs(graph, source, destination):  # returns a list of nodes in shortest path to traverse
+def bfs(
+    graph, source, destination
+):  # returns a list of nodes in shortest path to traverse
     frontier = Queue()
     frontier.put(source)
     came_from = {}

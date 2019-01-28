@@ -1,22 +1,26 @@
-''' 
+""" 
 * Team Id : 5377
 * Author List : Vikrant Gajria
 * Filename: aruco.py
 * Theme: TC -- Specific to eYRC
 * Functions: get_camera_params (str)
 * Global Variables: marker_length, INVERSE_MATRIX
-'''
+"""
 import numpy as np
 
 
 # marker_length: Length of aruco marker in meters.
-marker_length = 14/100
+marker_length = 14 / 100
 
 # Matrix to convert OpenCV coordinates to OpenGL system.
-INVERSE_MATRIX = np.array([[+1.0, +1.0, +1.0, +1.0],
-                           [-1.0, -1.0, -1.0, -1.0], # Inverts Y axis
-                           [-1.0, -1.0, -1.0, -1.0], # Inverts Z axis
-                           [+1.0, +1.0, +1.0, +1.0]])
+INVERSE_MATRIX = np.array(
+    [
+        [+1.0, +1.0, +1.0, +1.0],
+        [-1.0, -1.0, -1.0, -1.0],  # Inverts Y axis
+        [-1.0, -1.0, -1.0, -1.0],  # Inverts Z axis
+        [+1.0, +1.0, +1.0, +1.0],
+    ]
+)
 
 """
 Function Name : detect_markers()
@@ -29,8 +33,11 @@ Purpose: This function takes the image in form of a numpy array, camera_matrix a
          and tvec are calculated and stored in a list in a prescribed format. The list
          is returned as output for the function
 """
-def get_camera_params(npz_file='System.npz'):
+
+
+def get_camera_params(npz_file="System.npz"):
     with np.load(npz_file) as X:
-        camera_matrix, dist_coeff, _, _ = [X[i]
-                                           for i in ('mtx', 'dist', 'rvecs', 'tvecs')]
+        camera_matrix, dist_coeff, _, _ = [
+            X[i] for i in ("mtx", "dist", "rvecs", "tvecs")
+        ]
         return camera_matrix, dist_coeff

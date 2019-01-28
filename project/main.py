@@ -7,12 +7,9 @@ import json
 # ARENA CONFIGURATION
 
 # CONFIG 1
-arena_config = {
-    0: ('Water Pitcher', 8, '2-2'),
-    1: ('Pebble', 16, '1-1'),
-}
+arena_config = {0: ("Water Pitcher", 8, "2-2"), 1: ("Pebble", 16, "1-1")}
 
-Robot_start = 'START-1'
+Robot_start = "START-1"
 
 # CONFIG 2
 # arena_config = {
@@ -26,8 +23,9 @@ Robot_start = 'START-1'
 
 # UTILITY FUNCTIONS
 
+
 def get_vertices():
-    with open('./arena/arena_megadict.json') as f:
+    with open("./arena/arena_megadict.json") as f:
         mega_dict = json.load(f)
         mega_dict = util.clean_tree_dict(mega_dict)
 
@@ -40,7 +38,7 @@ def get_vertices():
 if __name__ == "__main__":
     v = get_vertices()
 
-    if Robot_start == 'START-1':
+    if Robot_start == "START-1":
         source = v.get_node(10, 180)
         orientation = 0
     else:
@@ -49,7 +47,7 @@ if __name__ == "__main__":
 
     pitcher = arena_config[0]
     pebble = arena_config[1]
-    
+
     pebble_nodes = [
         v.get_node(pebble[1], DIRECTION_MAPPING[pebble[2]][0]),
         v.get_node(pebble[1], DIRECTION_MAPPING[pebble[2]][1]),
@@ -65,12 +63,12 @@ if __name__ == "__main__":
     best_path = bfs(v, source, pebble_nodes[0])
 
     for i in paths_to_pebble:
-        print (i, end="\n\n")
+        print(i, end="\n\n")
 
     if len(paths_to_pebble[0]) < len(paths_to_pebble[1]):
         best_path = paths_to_pebble[0]
     else:
         best_path = paths_to_pebble[1]
 
-    t, orientation = traverse(best_path, orientation, 'p')
-    print (t)
+    t, orientation = traverse(best_path, orientation, "p")
+    print(t)

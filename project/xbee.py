@@ -1,11 +1,11 @@
-'''
+"""
 * Team Id : 5377
 * Author List : Vikrant Gajria
 * Filename: echo.py
 * Theme: TC -- Specific to eYRC
 * Functions: None (only __main__ block)
 * Global Variables: PORT, MAC_PORT
-'''
+"""
 import serial
 import time
 
@@ -20,7 +20,7 @@ def send(command):
         # Flush buffers.
         ser.flushInput()
         ser.flushOutput()
-        
+
         # Send bytes data.
         ser.write(command.encode())
         # Wait for microcontroller to start buffering.
