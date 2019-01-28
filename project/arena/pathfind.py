@@ -13,12 +13,6 @@ def to_vec(angle):
     return np.array([cos(radians(angle)), sin(radians(angle)), 0])
 
 
-def get_direction_vec(avec, bvec):
-    """ Return the vector originating from a to b. """
-    cvec = np.subtract(bvec, avec)
-    return cvec
-
-
 #######################################################
 #######################################################
 #######################################################
@@ -47,10 +41,10 @@ def bfs(graph, source, destination):
         if current == destination:
             break
 
-        for next in graph[current]:
-            if next not in came_from:
-                frontier.put(next)
-                came_from[next] = current
+        for n in graph[current]:
+            if n not in came_from:
+                frontier.put(n)
+                came_from[n] = current
     return reconstruct_path(came_from, source, destination)
 
 
@@ -79,17 +73,19 @@ def traverse(path, orientation, mode):
         svec = to_vec(source.pos[common_node])
         dvec = to_vec(destination.pos[common_node])
 
-        direction_vec = np.subtract(svec, dvec)
+        direction_vec = np.subtract(dvec, svec)
         robot_vec = to_vec(orientation)
 
         new_orientation = degrees(atan2(direction_vec[1], direction_vec[0]))
         screw_vec = np.cross(robot_vec, direction_vec)
 
-        # print ("DEBUG {} to {}".format(source, destination))
-        # print ("ORIENTATION {} VECTOR {}".format(int(orientation), to_vec(orientation)))
-        # print ("DIRECTION VECTOR {}".format(direction_vec))
-        # print ("SCREW VECTOR {}".format(screw_vec))
-        # print ("COMMAND {}".format('l' if screw_vec[2] > 0 else 'r'))
+        print ("DEBUG {} to {}".format(source, destination))
+        print ("ORIENTATION {} VECTOR {}".format(int(orientation), to_vec(orientation)))
+        print ("DIRECTION VECTOR {}".format(direction_vec))
+        print ("SCREW VECTOR {}".format(screw_vec))
+        print ("COMMAND {}".format('l' if screw_vec[2] > 0 else 'r'))
+
+        print("\n")
 
         if screw_vec[2] > 0:
             commands.append("l")

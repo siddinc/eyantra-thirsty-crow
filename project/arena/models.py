@@ -1,4 +1,8 @@
-DIRECTION_MAPPING = {"1-1": (60, 240), "2-2": (0, 180), "3-3": (120, 300)}
+DIRECTION_MAPPING = {
+    "1-1": (60, 240), 
+    "2-2": (0, 180), 
+    "3-3": (120, 300)
+}
 
 VERTEX_ANGLES = [0, 60, 120, 180, 240, 300]
 
@@ -22,8 +26,7 @@ class Node:
         return str(self.pos)
 
     def __repr__(self):
-        # return "<Node pos={}>".format(str(self.pos))
-        return str(self)
+        return "<Node pos={}>".format(str(self.pos))
 
     def __hash__(self):
         return hash(tuple(sorted(self.pos.items())))
@@ -88,11 +91,3 @@ class Arena:
                 nodes[n] = list(s)
 
         return nodes
-
-    def __str__(self):
-        return "\n".join(
-            ["{}: {}".format(n, neighs) for n, neighs in self.hexes.items()]
-        )
-
-    def __repr__(self):
-        return "<Arena nodes={}>".format(len(self.hexes))

@@ -7,22 +7,21 @@ import json
 # ARENA CONFIGURATION
 
 # CONFIG 1
-arena_config = {0: ("Water Pitcher", 8, "2-2"), 1: ("Pebble", 16, "1-1")}
-
+arena_config = {
+    0: ("Water Pitcher", 8, "2-2"),
+    1: ("Pebble", 18, "1-1")
+}
 Robot_start = "START-1"
 
 # CONFIG 2
 # arena_config = {
 #     0: ('Water Pitcher', 9, '2-2'),
-#     21: ('Pebble', 18, '2-2'),
-#     2: ('Pebble', 2, '3-3'),
+#     1: ('Pebble', 2, '2-2'),
 # }
-
 # Robot_start = 'START-2'
 
 
 # UTILITY FUNCTIONS
-
 
 def get_vertices():
     with open("./arena/arena_megadict.json") as f:
@@ -35,7 +34,7 @@ def get_vertices():
 
 # STARTING POINT
 
-if __name__ == "__main__":
+def main():
     v = get_vertices()
 
     if Robot_start == "START-1":
@@ -60,8 +59,6 @@ if __name__ == "__main__":
     # To the pebble
     paths_to_pebble = list(map(lambda n: bfs(v, source, n), pebble_nodes))
 
-    best_path = bfs(v, source, pebble_nodes[0])
-
     for i in paths_to_pebble:
         print(i, end="\n\n")
 
@@ -72,3 +69,7 @@ if __name__ == "__main__":
 
     t, orientation = traverse(best_path, orientation, "p")
     print(t)
+
+
+if __name__ == "__main__":
+    main()
