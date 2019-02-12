@@ -1,5 +1,7 @@
 from arena.models import Arena, DIRECTION_MAPPING
 from arena.pathfind import bfs, traverse
+from xbee import send_xbee, read_xbee_forever
+from threading import Thread
 import util
 import json
 
@@ -9,9 +11,9 @@ import json
 # CONFIG 1
 arena_config = {
     0: ("Water Pitcher", 8, "2-2"),
-    1: ("Pebble", 18, "1-1")
+    1: ("Pebble", 13, "3-3")
 }
-Robot_start = "START-1"
+Robot_start = "START-2"
 
 # CONFIG 2
 # arena_config = {
@@ -23,6 +25,12 @@ Robot_start = "START-1"
 
 # UTILITY FUNCTIONS
 
+# v: Vertices
+v = None
+
+# Thread for listening to serial
+xbee_thread = Thread(target=read_xbee_forever)
+
 def get_vertices():
     with open("./arena/arena_megadict.json") as f:
         mega_dict = json.load(f)
@@ -32,9 +40,25 @@ def get_vertices():
     return arena.vertices
 
 
+def get_pebble_nodes(pebble_list):
+    nodes = list()
+    for hex_no, direction in pebble_list:
+        for i in range(2):
+            n = v.get_node(hex_no, DIRECTION_MAPPING[direction][i])
+            n.hex_no = hex_no
+            n.angle = DIRECTION_MAPPING[direction][i]
+            nodes.append(n)
+    return nodes
+
+def get_direction_nodes(h, d):
+    global v
+    return [v.get_node(h, DIRECTION_MAPPING[d][0]), v.get_node(h, DIRECTION_MAPPING[d][1])]
+
+
 # STARTING POINT
 
 def main():
+    global v
     v = get_vertices()
 
     if Robot_start == "START-1":
@@ -44,31 +68,28 @@ def main():
         source = v.get_node(14, 0)
         orientation = 180
 
-    pitcher = arena_config[0]
-    pebble = arena_config[1]
+    pitcher_hex = next((v[1], v[2]) for _, v in arena_config.items() if v[0] == "Water Pitcher")
+    pitcher_nodes = get_direction_nodes(*pitcher_hex)
+    pebble_list = [(v[1], v[2]) for k, v in arena_config.items() if v[0] == "Pebble"]
 
-    pebble_nodes = [
-        v.get_node(pebble[1], DIRECTION_MAPPING[pebble[2]][0]),
-        v.get_node(pebble[1], DIRECTION_MAPPING[pebble[2]][1]),
-    ]
-    pitcher_nodes = [
-        v.get_node(pitcher[1], DIRECTION_MAPPING[pitcher[2]][0]),
-        v.get_node(pitcher[1], DIRECTION_MAPPING[pitcher[2]][1]),
-    ]
+    to_send = []
 
-    # To the pebble
-    paths_to_pebble = list(map(lambda n: bfs(v, source, n), pebble_nodes))
+    xbee_thread.start()
 
-    for i in paths_to_pebble:
-        print(i, end="\n\n")
+    while pebble_list:
+        pebble_node_list = get_pebble_nodes(pebble_list)
+        paths = map(lambda n: bfs(v, source, n), pebble_node_list)
+        best_path = min(paths, key=lambda e: len(e))
+        t, orientation = traverse(best_path, orientation, "p")
+        print (best_path)
+        print (t)
+        to_send = t
+        pebble_list.pop()
 
-    if len(paths_to_pebble[0]) < len(paths_to_pebble[1]):
-        best_path = paths_to_pebble[0]
-    else:
-        best_path = paths_to_pebble[1]
-
-    t, orientation = traverse(best_path, orientation, "p")
-    print(t)
+    for c in to_send:
+        print ("Sent {}".format(c))
+        send_xbee(c)
+    
 
 
 if __name__ == "__main__":

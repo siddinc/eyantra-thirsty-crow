@@ -1,3 +1,5 @@
+from .angles import get_viscinity, inverse_angle
+
 DIRECTION_MAPPING = {
     "1-1": (60, 240), 
     "2-2": (0, 180), 
@@ -5,14 +7,6 @@ DIRECTION_MAPPING = {
 }
 
 VERTEX_ANGLES = [0, 60, 120, 180, 240, 300]
-
-
-def get_viscinity(angle, offset):
-    return (angle + offset + 360) % 360
-
-
-def inverse_angle(angle):
-    return (angle + 180) % 360
 
 
 class Node:

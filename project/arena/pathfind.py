@@ -1,5 +1,6 @@
 from queue import Queue
-from math import cos, sin, atan2, radians, degrees
+from math import degrees, atan2
+from .angles import to_vec, inverse_angle, positive_angle
 import numpy as np
 import logging
 
@@ -9,18 +10,9 @@ import logging
 #######################################################
 
 
-def to_vec(angle):
-    return np.array([cos(radians(angle)), sin(radians(angle)), 0])
-
-
-#######################################################
-#######################################################
-#######################################################
-
-
 def reconstruct_path(came_from, start, goal):  # returns a list of nodes to traverse
     current = goal
-    path = []
+    path = list()
     while current != start:
         path.append(current)
         current = came_from[current]
@@ -66,7 +58,6 @@ def traverse(path, orientation, mode):
 
     for source, destination in pairs:
         if destination == 0:
-            commands.append(mode)
             break
 
         common_node = [key for key in source.pos if key in destination.pos][0]
@@ -92,5 +83,21 @@ def traverse(path, orientation, mode):
         else:
             commands.append("r")
         orientation = new_orientation
+
+    if positive_angle(int(orientation)) != inverse_angle(path[-2].angle):
+        object_vec = to_vec(inverse_angle(path[-2].angle)) # Last node's angle.
+        robot_vec = to_vec(orientation)
+        final_screw_vec = np.cross(robot_vec, object_vec)
+
+        print (robot_vec)
+        print (object_vec)
+        print (robot_vec == object_vec)
+        if final_screw_vec[2] > 0:
+            commands.append("L")
+        else:
+            commands.append("R")
+    
+    # Final pickup or drop command.
+    commands.append(mode)
 
     return commands, orientation
